@@ -24,4 +24,3 @@ environment:
   SWITCH_IP: "!env switch_ip"
   USERNAME: "!env username"
   PASSWORD: "!env password"
-image: "ghcr.io/home-assistant/{arch}-addon-example"
