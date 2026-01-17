@@ -1,0 +1,35 @@
+#!/usr/bin/with-contenv bashio
+
+# Read http_port from config
+http_port=$(bashio::config 'http_port')
+
+# Start writing config.yml
+echo "http_port: $http_port" > /data/config.yml
+echo "switch:" >> /data/config.yml
+
+# Get the number of switches
+switch_count=$(bashio::config 'switches | length')
+
+# Loop through switches and write each to config.yml
+for i in $(seq 0 $((switch_count - 1))); do
+    ip=$(bashio::config "switches[${i}].ip")
+    username=$(bashio::config "switches[${i}].username")
+    password=$(bashio::config "switches[${i}].password")
+    cache_login=$(bashio::config "switches[${i}].cache_login")
+    sw_http_port=$(bashio::config "switches[${i}].http_port")
+
+    # Ensure boolean is lowercase and values are YAML-safe (quoted)
+    if [ "$cache_login" = "True" ] || [ "$cache_login" = "true" ]; then
+        cache_login_value=true
+    else
+        cache_login_value=false
+    fi
+
+    echo "  - ip: $ip" >> /data/config.yml
+    echo "    username: $username" >> /data/config.yml
+    echo "    password: $password" >> /data/config.yml
+    echo "    cache_login: $cache_login_value" >> /data/config.yml
+    echo "    http_port: $sw_http_port" >> /data/config.yml
+done
+
+exec python3 /usr/bin/tl-sg-prometheus-exporter.py --config /data/config.yml
